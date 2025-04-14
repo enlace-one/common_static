@@ -9,12 +9,42 @@ import re
 
 def getAlternateStylesForSVG(svg_name=None):
     styles = [
-        {"name": "black", "color1": "2b2b2b", "color2": "444444"},
-        {"name": "cyan", "color1": "00bfbf", "color2": "008080"},
-        {"name": "blue", "color1": "9acee6", "color2": "1a3c5e"},
-        {"name": "green", "color1": "619E73", "color2": "333f44"},
-        {"name": "purple", "color1": "AF84A3", "color2": "4a5e7c"},
-        {"name": "red", "color1": "af0707", "color2": "3a3a3a"},
+        {
+            "name": "black",
+            "color1": "2b2b2b",
+            "color2": "444444",
+            "color3": "333333",
+        },  # Light gray for subtle contrast
+        {
+            "name": "cyan",
+            "color1": "00bfbf",
+            "color2": "008080",
+            "color3": "00e6e6",
+        },  # Brighter cyan for vibrancy
+        {
+            "name": "blue",
+            "color1": "9acee6",
+            "color2": "1a3c5e",
+            "color3": "4d8ab5",
+        },  # Mid-tone blue for balance
+        {
+            "name": "green",
+            "color1": "619E73",
+            "color2": "333f44",
+            "color3": "7ab893",
+        },  # Lighter green for harmony
+        {
+            "name": "purple",
+            "color1": "AF84A3",
+            "color2": "4a5e7c",
+            "color3": "c299b8",
+        },  # Soft lavender for cohesion
+        {
+            "name": "red",
+            "color1": "af0707",
+            "color2": "3a3a3a",
+            "color3": "ff4040",
+        },  # Bright red for pop
     ]
     svg_background = """<g>
   <title>Layer 1</title>
@@ -37,26 +67,32 @@ def getAlternateStylesForSVG(svg_name=None):
  </g>"""
 
     if svg_name is None:
-        print("Path should be ../public")
+        print("Path should be ../topics")
         svg_name = input("Enter the SVG name:")
     svg_style = svg_name.split("-")[1].split(".")[0]
     svg_base_name = svg_name.split("-")[0]
-    print(f"Using {svg_style} as base style to set others from")
+    print(f"\nUsing {svg_style} as base style to set others from for {svg_base_name}")
     chosen_style = [style for style in styles if style["name"] == svg_style][0]
     styles = [style for style in styles if style["name"] != svg_style]
-    with open(f"./public/topics/{svg_name}", "r") as svg:
+    with open(f"./topics/{svg_name}", "r") as svg:
         svg_format = svg.read()
     for style in styles:
-        with open(
-            f"./public/topics/{svg_base_name}-{style['name']}.svg", "w+"
-        ) as new_svg:
-            contents = svg_format.replace(
-                chosen_style["color1"], style["color1"]
-            ).replace(chosen_style["color2"], style["color2"])
-            new_svg.write(contents)
-        print(
-            f"""{{ name: "{svg_base_name.title()} ({style['name'].title()})", imageLink: "{svg_base_name}-{style['name']}.svg" }},"""
+        with open(f"./topics/{svg_base_name}-{style['name']}.svg", "r+") as new_svg:
+            old = new_svg.read()
+        contents = (
+            svg_format.replace(chosen_style["color1"], style["color1"])
+            .replace(chosen_style["color2"], style["color2"])
+            .replace(chosen_style["color3"], style["color3"])
         )
+        if contents.strip() != old.strip():
+            with open(f"./topics/{svg_base_name}-{style['name']}.svg", "w+") as new_svg:
+                new_svg.write(contents)
+                print(
+                    f"""{{ name: "{svg_base_name.title()} ({style['name'].title()})", imageLink: "{svg_base_name}-{style['name']}.svg" }},"""
+                )
+        else:
+            print(".", end="")
+
     ellipse_pattern = r'<ellipse[^>]+id="svg_1"[^>]+>'
     svg_with_bg = re.sub(ellipse_pattern, "", svg_format)
     # svg_with_bg = svg_with_bg.replace(chosen_style["color1"], "FFFFFF")
@@ -64,15 +100,20 @@ def getAlternateStylesForSVG(svg_name=None):
     svg_with_bg = re.sub(
         g_layer1_regex, svg_background + "<g><title>Layer 2</title>", svg_with_bg
     )
-    with open(f"./public/topics/{svg_base_name}-colorful.svg", "w+") as new_svg:
-        new_svg.write(svg_with_bg)
-    print(
-        f"""{{ name: "{svg_base_name.title()} (Colorful)", imageLink: "{svg_base_name}-colorful.svg" }},"""
-    )
+    with open(f"./topics/{svg_base_name}-colorful.svg", "r+") as new_svg:
+        old = new_svg.read()
+    if old != svg_with_bg:
+        with open(f"./topics/{svg_base_name}-colorful.svg", "w+") as new_svg:
+            new_svg.write(svg_with_bg)
+        print(
+            f"""{{ name: "{svg_base_name.title()} (Colorful)", imageLink: "{svg_base_name}-colorful.svg" }},"""
+        )
+    else:
+        print(".", end="")
 
 
 def getAlternateStylesForAllSVG():
-    svg_dir = "./public/topics/"
+    svg_dir = "./topics/"
     for root, dirs, files in os.walk(svg_dir):
         for file in files:
             if file.endswith(".svg") and "-black" in file:
@@ -80,7 +121,7 @@ def getAlternateStylesForAllSVG():
 
 
 def getDefaultTopics():
-    svg_dir = "./public/topics/"
+    svg_dir = "./topics/"
     print("export const DEFAULT_TOPICS = [")
     for root, dirs, files in os.walk(svg_dir):
         for file in files:
@@ -113,12 +154,12 @@ options = [
     },
     {
         "id": 1,
-        "name": "Get alternative color styles for all SVGs in /public based on -black",
+        "name": "Get alternative color styles for all SVGs in /topics based on -black",
         "function": getAlternateStylesForAllSVG,
     },
     {
         "id": 2,
-        "name": "Get DEFAULT_TOPICS for all SVGs in /public",
+        "name": "Get DEFAULT_TOPICS for all SVGs in /topics",
         "function": getDefaultTopics,
     },
 ]
