@@ -77,8 +77,11 @@ def getAlternateStylesForSVG(svg_name=None):
     with open(f"./topics/{svg_name}", "r") as svg:
         svg_format = svg.read()
     for style in styles:
-        with open(f"./topics/{svg_base_name}-{style['name']}.svg", "r+") as new_svg:
-            old = new_svg.read()
+        try:
+            with open(f"./topics/{svg_base_name}-{style['name']}.svg", "r+") as new_svg:
+                old = new_svg.read()
+        except FileNotFoundError:
+            old = "bbbb"
         contents = (
             svg_format.replace(chosen_style["color1"], style["color1"])
             .replace(chosen_style["color2"], style["color2"])
@@ -100,8 +103,12 @@ def getAlternateStylesForSVG(svg_name=None):
     svg_with_bg = re.sub(
         g_layer1_regex, svg_background + "<g><title>Layer 2</title>", svg_with_bg
     )
-    with open(f"./topics/{svg_base_name}-colorful.svg", "r+") as new_svg:
-        old = new_svg.read()
+
+    try:
+        with open(f"./topics/{svg_base_name}-colorful.svg", "r+") as new_svg:
+            old = new_svg.read()
+    except FileNotFoundError:
+        old = "bbbb"
     if old != svg_with_bg:
         with open(f"./topics/{svg_base_name}-colorful.svg", "w+") as new_svg:
             new_svg.write(svg_with_bg)
